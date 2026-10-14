@@ -1,122 +1,79 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import { HomeView } from './components/HomeView';
+import { BattleTracker } from './components/BattleTracker';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [currentView, setCurrentView] = useState('home'); // 'home' or 'tracker'
+  
+  // Tema Oscuro / Claro (Por defecto oscuro amigable GitHub Dark)
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pokenotas_theme');
+      return saved !== null ? JSON.parse(saved) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pokenotas_theme', JSON.stringify(isDarkMode));
+    } catch (e) {}
+  }, [isDarkMode]);
+
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+
+  const [history, setHistory] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pokenotas_history');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error('Error loading history from localStorage', e);
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('pokenotas_history', JSON.stringify(history));
+    } catch (e) {
+      console.error('Error saving history to localStorage', e);
+    }
+  }, [history]);
+
+  const handleSaveBattle = (battleData) => {
+    setHistory((prev) => [battleData, ...prev]);
+  };
+
+  const handleDeleteBattle = (id) => {
+    setHistory((prev) => prev.filter((b) => b.id !== id));
+  };
+
+  const handleLoadBattle = (battle) => {
+    setCurrentView('tracker');
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get pis</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+    <div>
+      {currentView === 'home' ? (
+        <HomeView
+          onStartBattle={() => setCurrentView('tracker')}
+          history={history}
+          onLoadBattle={handleLoadBattle}
+          onDeleteBattle={handleDeleteBattle}
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
+        />
+      ) : (
+        <BattleTracker
+          onBackToHome={() => setCurrentView('home')}
+          history={history}
+          saveBattle={handleSaveBattle}
+          onDeleteBattle={handleDeleteBattle}
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
+        />
+      )}
+    </div>
+  );
 }
-
-export default App
