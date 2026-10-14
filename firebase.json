@@ -1,7 +1,7 @@
 {
   "hosting": {
     "site": "pokenota",
-    "public": "public",
+    "public": "dist",
     "ignore": [
       "firebase.json",
       "**/.*",
