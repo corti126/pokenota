@@ -2,11 +2,11 @@
 
 @layer base {
   body {
-    @apply font-sans antialiased selection:bg-amber-500 selection:text-zinc-950 min-h-screen transition-colors duration-200;
+    @apply font-sans antialiased selection:bg-[#88c0d0] selection:text-[#2e3440] min-h-screen transition-colors duration-200;
   }
 }
 
-/* Scrollbars personalizados */
+/* Scrollbars personalizados en tonos pastel */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -15,9 +15,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(150, 150, 150, 0.3);
+  background: rgba(136, 192, 208, 0.35);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 150, 150, 0.5);
+  background: rgba(136, 192, 208, 0.55);
 }

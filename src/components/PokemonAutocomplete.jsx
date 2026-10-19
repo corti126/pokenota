@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { ALL_POKEMON_LIST } from '../data/pokemonList';
 import { Check } from 'lucide-react';
+import { usePokemonList, filterPokemonList } from '../data/usePokemonList';
 
-export function PokemonAutocomplete({ value, onChange, placeholder = "Pokémon...", isDarkMode }) {
+export function PokemonAutocomplete({ value, onChange, placeholder = "Pokémon...", isDarkMode, readOnly = false }) {
   const [query, setQuery] = useState(value || '');
   const [isOpen, setIsOpen] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const wrapperRef = React.useRef(null);
+
+  // Lista completa de todos los Pokémon (formas, regionales, megas, paradojas...)
+  const fullList = usePokemonList();
 
   React.useEffect(() => {
     setQuery(value || '');
@@ -22,16 +25,9 @@ export function PokemonAutocomplete({ value, onChange, placeholder = "Pokémon..
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleInputChange = (e) => {
-    const val = e.target.value;
-    setQuery(val);
-    onChange(val);
-
+  const updateSuggestions = (val) => {
     if (val.trim().length > 0) {
-      const filtered = ALL_POKEMON_LIST.filter(p => 
-        p.toLowerCase().includes(val.toLowerCase())
-      ).slice(0, 8);
-      setSuggestions(filtered);
+      setSuggestions(filterPokemonList(fullList, val));
       setIsOpen(true);
     } else {
       setSuggestions([]);
@@ -39,11 +35,28 @@ export function PokemonAutocomplete({ value, onChange, placeholder = "Pokémon..
     }
   };
 
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setQuery(val);
+    onChange(val);
+    updateSuggestions(val);
+  };
+
   const handleSelect = (pokemonName) => {
+    // Se conserva el nombre exacto de la API (con guiones) para que el sprite cargue
     const formatted = pokemonName.charAt(0).toUpperCase() + pokemonName.slice(1);
     setQuery(formatted);
     onChange(formatted);
     setIsOpen(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (suggestions.length > 0) {
+        handleSelect(suggestions[0]);
+      }
+    }
   };
 
   return (
@@ -53,36 +66,30 @@ export function PokemonAutocomplete({ value, onChange, placeholder = "Pokémon..
           type="text"
           value={query}
           onChange={handleInputChange}
-          onFocus={() => {
-            if (query.trim().length > 0) {
-              const filtered = ALL_POKEMON_LIST.filter(p => 
-                p.toLowerCase().includes(query.toLowerCase())
-              ).slice(0, 8);
-              setSuggestions(filtered);
-              setIsOpen(true);
-            }
-          }}
+          onKeyDown={handleKeyDown}
+          onFocus={() => !readOnly && updateSuggestions(query)}
           placeholder={placeholder}
-          className={`w-full px-2.5 py-1.5 border rounded-xl text-xs placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/55 font-medium shadow-inner ${
-            isDarkMode ? 'bg-[#181b22] border-[#30363d] text-[#e6edf3]' : 'bg-[#f6f8fa] border-[#d0d7de] text-[#24292f]'
+          disabled={readOnly}
+          className={`w-full px-2.5 py-1.5 border rounded-xl text-xs placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#88c0d0] font-medium shadow-inner disabled:opacity-60 disabled:cursor-not-allowed ${
+            isDarkMode ? 'bg-[#1e222e] border-[#3b4252] text-[#d8dee9]' : 'bg-[#f7f9fb] border-[#d8dee9] text-[#2e3440]'
           }`}
         />
       </div>
 
       {isOpen && suggestions.length > 0 && (
         <ul className={`absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto border rounded-xl shadow-2xl divide-y ${
-          isDarkMode ? 'bg-[#21262d] border-[#30363d] divide-[#30363d]' : 'bg-white border-[#d0d7de] divide-[#f6f8fa]'
+          isDarkMode ? 'bg-[#282c37] border-[#3b4252] divide-[#3b4252]' : 'bg-white border-[#d8dee9] divide-[#e5e9f0]'
         }`}>
           {suggestions.map((poke) => (
             <li
               key={poke}
               onClick={() => handleSelect(poke)}
-              className={`px-3 py-2 text-xs cursor-pointer flex items-center justify-between capitalize transition-colors ${
-                isDarkMode ? 'text-[#c9d1d9] hover:bg-[#30363d]' : 'text-[#24292f] hover:bg-[#f6f8fa]'
+              className={`px-3 py-2 text-xs cursor-pointer flex items-center justify-between transition-colors ${
+                isDarkMode ? 'text-[#d8dee9] hover:bg-[#3b4252]' : 'text-[#2e3440] hover:bg-[#e5e9f0]'
               }`}
             >
-              <span>{poke.replace('-', ' ')}</span>
-              {query.toLowerCase() === poke.toLowerCase() && <Check size={13} className="text-amber-500" />}
+              <span className="capitalize">{poke.replace(/-/g, ' ')}</span>
+              {query.toLowerCase() === poke.toLowerCase() && <Check size={13} className="text-[#88c0d0]" />}
             </li>
           ))}
         </ul>
